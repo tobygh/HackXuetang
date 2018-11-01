@@ -1,51 +1,70 @@
-var pbms=new Array();/*记录每道题目尝试到了第几种答案*/
-function init(){/*获取所有题目的种类*/
+var pbms=new Array();/*记录题目已经试到第几种答案或者已经正确*/
+
+/*读取题目的id和类型*/
+function init(){
+    /*获得答卷*/
     var all=document.getElementById('course-content');
+    /*获得题目集*/
     var sec=all.getElementsByClassName('problem');
-    for(var sec_id=0;sec_id<sec.length;++sec_id){/*遍历题目集*/
+    /*遍历题目集*/
+    for(var sec_id=0;sec_id<sec.length;++sec_id){
         var hd=sec[sec_id].getElementsByTagName('form');
-        for(var i=0;i<hd.length;i++){/*遍历题目*/
+        /*遍历题目*/
+        for(var i=0;i<hd.length;i++){
             var ap={
                 'type': 0,
                 'key':  0,
                 'sol':  0,
                 'pid': hd[i].getAttribute('id')
             };
+            /*读取选项*/
             var cs=hd[i].getElementsByTagName('input');
-            /*checkbox的为多选题，其他的处理方法相同*/
-            if(cs[0].getAttribute('type')=="checkbox"){ap.type=1;ap.key=3;}
+            /*选项是勾选框，说明是多选题*/
+            if(cs[0].getAttribute('type')=="checkbox"){
+                ap.type=1;
+                ap.key=3;/*多选题应该从AB开始遍历*/
+            }
             else{ap.type=0;}
             pbms.push(ap);
         }
     }
 }
 
-function fill(){/*将用于尝试的答案填到题目中*/
+/*把要尝试的答案填入每个还没作对的题目中*/
+function fill(){
     for(var i=0;i<pbms.length;++i){
+        /*获取题目*/
         var hd=document.getElementById(pbms[i].pid);
+        /*获取选项*/
         var cs=hd.getElementsByTagName('input');
-        if(pbms[i].type==0){/*单选题直接模拟鼠标点击对应答案*/
+        if(pbms[i].type==0){/*单选题*/
             var Mclick=document.createEvent("MouseEvents");
             Mclick.initEvent('click',true,true);
+            /*直接模拟鼠标点击对应的选项*/
             cs[pbms[i].key].dispatchEvent(Mclick);
         }
-        else{/*多选题，key的值的二进制对应哪些选项要选，哪些不选*/
+        else{/*多选题*/
             for(var j=0;j<cs.length;++j){
+                /*多选题的key以二进制存放答案，比如0101对应BD*/
                 cs[j].checked=(pbms[i].key&(1<<j))>0;
             } 
         }
     }
 }
 
-function check(){/*检查提交后的情况，确认是否为正确解，否则更新key为下一个要尝试的解*/
+/*检查当前答案的结果是否为正确*/
+function check(){
     for(var i=0;i<pbms.length;++i){
+        /*获取题目*/
         var hd=document.getElementById(pbms[i].pid);
-        if(pbms[i].type==0){/*单选题，检查label的class是否对应的class*/
+        if(pbms[i].type==0){/*单选题*/
+            /*检查选项对应的label是否为choicegroup_correct*/
             var cs=hd.getElementsByTagName('label');
             if(cs[pbms[i].key].getAttribute('class')=="choicegroup_correct")pbms[i].sol=1;
             else pbms[i].key++;
         }
-        else {/*多选题，检查status correct元素是否存在*/
+        else {/*多选题*/
+            /*检查选项里面有没有status correct的元素*/
             var st=hd.getElementsByClassName('status correct');
             if(st.length>0)pbms[i].sol=1;
             else pbms[i].key++;
@@ -53,22 +72,25 @@ function check(){/*检查提交后的情况，确认是否为正确解，否则�
     }
 }
 
-function submit(){/*模拟鼠标点击所有提交按钮，完成提交*/
+/*点击所有提交按钮*/
+function submit(){
     var all=document.getElementById('course-content');
+    /*获取提交按钮*/
     var ob=all.getElementsByClassName('check 提交');
-    for(var i=0;i<ob.length;++i){/*所有的提交按钮*/
+    for(var i=0;i<ob.length;++i){
         var Mclick=document.createEvent("MouseEvents");
         Mclick.initEvent('click',true,true);
         ob[i].dispatchEvent(Mclick);
     }
 }
 
+/*自动重复：填答案-提交-检查 */
 function auto(){
     fill();
     var t=new Date();
     console.log(t.getHours()+':'+t.getMinutes()+" 进行了一次提交");
     setTimeout(submit,1000);
-    setTimeout(check,1000);
+    setTimeout(check,2000);
 }
 
 init();
