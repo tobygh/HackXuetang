@@ -52,7 +52,16 @@ function fill(){
     }
 }
 
-/*检查当前答案的结果是否为正确*/
+function NumberOfOne(n){
+    var cnt=0;
+    while(n>0){
+        cnt+=(n&1);
+        n>>=1;
+    }
+    return cnt;
+}
+
+/*检查当前答案的结果是否为正确，并生成下一个可能的答案*/
 function check(){
     for(var i=0;i<pbms.length;++i){
         /*获取题目*/
@@ -60,14 +69,18 @@ function check(){
         if(pbms[i].type==0){/*单选题*/
             /*检查选项对应的label是否为choicegroup_correct*/
             var cs=hd.getElementsByTagName('label');
-            if(cs[pbms[i].key].getAttribute('class')=="choicegroup_correct")pbms[i].sol=1;
-            else pbms[i].key++;
+            if(cs[pbms[i].key].getAttribute('class')=="choicegroup_correct"){pbms[i].sol=1;}
+            else {pbms[i].key++;}
         }
         else {/*多选题*/
             /*检查选项里面有没有status correct的元素*/
             var st=hd.getElementsByClassName('status correct');
-            if(st.length>0)pbms[i].sol=1;
-            else pbms[i].key++;
+            if(st.length>0){pbms[i].sol=1;}
+            else {
+                /*提高效率，只生成有2个1以上的二进制数*/
+                pbms[i].key++;
+                while(NumberOfOne(pbms[i].key)<2)pbms[i].key++;
+            }
         }
     }
 }
