@@ -108,4 +108,4 @@ function auto(){
 
 init();
 auto();
-setInterval(auto,(5*60+5)*1000);
+setInterval(auto,(Math.floor(5*60+50*Math.random()))*1000);
